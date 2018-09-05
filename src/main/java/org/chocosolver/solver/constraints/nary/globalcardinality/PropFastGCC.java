@@ -210,6 +210,23 @@ public class PropFastGCC extends Propagator<IntVar> {
         }
         return useful;
     }
+    
+    //***********************************************************************************
+    // GETTERS
+    //***********************************************************************************
+    
+    public int getNbDecVars(){
+    	return n;
+    }
+    
+    public int getNbValue(){
+    	return n2;
+    }
+    
+    public int[] getValues(){
+    	return values;
+    }
+    
 
     //***********************************************************************************
     // INFO
