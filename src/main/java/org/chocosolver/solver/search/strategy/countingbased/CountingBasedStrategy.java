@@ -38,6 +38,10 @@ import org.chocosolver.util.PoolManager;
  */
 public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 
+	// ***********************************************************************************
+	// VARIABLES
+	// ***********************************************************************************
+
 	/**
 	 * Pool of decisions of the strategy
 	 */
@@ -61,12 +65,21 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 	/**
 	 * Sorted array containing assignments to explore starting with order[next]
 	 */
-	private IntVarAssignment[] order;
+	protected IntVarAssignment[] order;
 
 	/**
 	 * Index of the next assignment to explore in the order array
 	 */
 	private int next;
+
+	// Those following variables define the estimator that will be used on the
+	// concerned constraints
+	private String estimatorAlldifferent = CountingEstimators.ALLDIFFERENT_PQZ;
+	private String estimatorGCC = CountingEstimators.GCC_PQZ;
+
+	// ***********************************************************************************
+	// CONSTRUCTORS
+	// ***********************************************************************************
 
 	/**
 	 * Create a Counting Based Strategy, initializing the decision pool and the
@@ -95,6 +108,10 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 
 		this.tools = new CountingTools();
 	}
+
+	// ***********************************************************************************
+	// METHODS
+	// ***********************************************************************************
 
 	public Decision<IntVar> getDecision() {
 
@@ -158,5 +175,35 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 	public boolean needUpdate() {
 		return false;
 	}
+
+	// ***********************************************************************************
+	// GETTERS & SETTERS
+	// ***********************************************************************************
+
+	public Countable[] getCountables() {
+		return countables;
+	}
+	
+	public void setEstimatorAlldifferent(String estimator){
+		this.estimatorAlldifferent=estimator;
+	}
+	
+	public void setEstimatorGCC(String estimator){
+		this.estimatorGCC=estimator;
+	}
+
+	public String getEstimatorAlldifferent() {
+		return estimatorAlldifferent;
+	}
+
+	public String getEstimatorGCC() {
+		return estimatorGCC;
+	}
+
+	public CountingTools getTools() {
+		return tools;
+	}
+	
+	
 
 }

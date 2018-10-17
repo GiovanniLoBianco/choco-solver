@@ -10,10 +10,10 @@ import org.chocosolver.solver.variables.IntVar;
  *
  */
 public class IntVarAssignment {
-	
+
 	private IntVar var;
 	private int val;
-	
+
 	public IntVarAssignment(IntVar var, int val) {
 		super();
 		this.var = var;
@@ -26,6 +26,10 @@ public class IntVarAssignment {
 
 	public int getVal() {
 		return val;
+	}
+
+	public boolean equals(IntVarAssignment a) {
+		return a.getVar().equals(var) && a.getVal() == val;
 	}
 
 }
