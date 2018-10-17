@@ -8,8 +8,11 @@
  */
 package org.chocosolver.solver.constraints.nary.alldifferent;
 
+import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.chocosolver.solver.Cause;
 import org.chocosolver.solver.constraints.Constraint;
@@ -19,6 +22,7 @@ import org.chocosolver.solver.constraints.nary.alldifferent.algo.AlgoAllDiffAC;
 import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.search.strategy.countingbased.Countable;
 import org.chocosolver.solver.search.strategy.countingbased.CountingEstimators;
+import org.chocosolver.solver.search.strategy.countingbased.tools.CountingTools;
 import org.chocosolver.solver.search.strategy.countingbased.tools.IntVarAssignment;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.solver.variables.events.PropagatorEventType;
@@ -78,7 +82,7 @@ public class PropAllDiffAC extends Propagator<IntVar> implements Countable {
 	// ***********************************************************************************
 
 	@Override
-	public Map<IntVarAssignment, Double> computeDensities(String estimator) {
+	public Map<IntVarAssignment, Double> computeDensities(String estimator, CountingTools tools) {
 		// TODO Auto-generated method stub
 
 		// Map containing the solution densities for each possible assignment
@@ -91,8 +95,8 @@ public class PropAllDiffAC extends Propagator<IntVar> implements Countable {
 
 			if (!var.isInstantiated()) {
 
-				// Map containing every estimation of number of solution for
-				// each possible assignment for var.
+				// Map containing every estimation of number of remaining tuples
+				// for each possible assignment for var.
 				Map<IntVarAssignment, Double> varMap = new HashMap<IntVarAssignment, Double>();
 
 				// total stores the total number of remaining solution, which
@@ -116,11 +120,14 @@ public class PropAllDiffAC extends Propagator<IntVar> implements Countable {
 
 						// We compute an estimation of the number of remaining
 						// solutions and we update total and varMap
-						double estimNbRemainingSolutions = estimateNbSolutions(estimator);
+						double estimNbRemainingSolutions = estimateNbSolutions(estimator, tools);
 						varMap.put(new IntVarAssignment(var, val), estimNbRemainingSolutions);
 						total += estimNbRemainingSolutions;
 
 					} catch (ContradictionException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
@@ -131,7 +138,7 @@ public class PropAllDiffAC extends Propagator<IntVar> implements Countable {
 					this.getModel().getEnvironment().worldPop();
 
 				}
-				
+
 				// We put into map the solution densities for var
 				for (IntVarAssignment assignment : varMap.keySet()) {
 					map.put(assignment, varMap.get(assignment) / total);
@@ -141,16 +148,72 @@ public class PropAllDiffAC extends Propagator<IntVar> implements Countable {
 		return map;
 	}
 
-	private double estimateNbSolutions(String estimator) {
-		if(this.isCompletelyInstantiated()){
+	/**
+	 * 
+	 * @param estimator
+	 * @param tools
+	 * @return an estimation of the number of remaining tupes for the current
+	 *         alldifferent constraint
+	 * @throws IOException
+	 */
+	private double estimateNbSolutions(String estimator, CountingTools tools) throws IOException {
+
+		if (this.isCompletelyInstantiated()) {
 			return 1.0;
 		} else {
-			switch(estimator){
-			case CountingEstimators.ALLDIFFERENT_PQZ : break;
-			case CountingEstimators.ALLDIFFERENT_ER : break;
-			case CountingEstimators.ALLDIFFERENT_FDS : break;
-			default : break;
+
+			// We count the number of remaining variables and values
+			// in order to know how many fake values we must add
+			int nbRemainingVars = 0;
+			Set<Integer> remainingValueSet = new HashSet<Integer>();
+			for (IntVar x : vars) {
+				if (!x.isInstantiated()) {
+					nbRemainingVars++;
+					for (int y = x.getLB(); y <= x.getUB(); y = x.nextValue(y)) {
+						remainingValueSet.add(y);
+					}
+				}
 			}
+			int nbFakeValues = remainingValueSet.size() - nbRemainingVars;
+
+			// We compute the estimation depending on estimator
+			double estim = 1.0;
+			switch (estimator) {
+			case CountingEstimators.ALLDIFFERENT_PQZ:
+				for (IntVar x : vars) {
+					if (!x.isInstantiated()) {
+						estim *= tools.computeBMFactors(x.getDomainSize());
+					}
+				}
+				for (int k = 1; k <= nbFakeValues; k++) {
+					estim *= tools.computeBMFactors(remainingValueSet.size()) / k;
+				}
+				break;
+			case CountingEstimators.ALLDIFFERENT_ER:
+				int sumDomain = 0;
+				for (IntVar x : vars) {
+					if (!x.isInstantiated()) {
+						sumDomain += x.getDomainSize();
+					}
+				}
+				double p = sumDomain / (1.0 * nbRemainingVars * remainingValueSet.size());
+				for (int k = nbFakeValues + 1; k <= remainingValueSet.size(); k++) {
+					estim *= p * k;
+				}
+				break;
+			case CountingEstimators.ALLDIFFERENT_FDS:
+				int k = nbFakeValues + 1;
+				for (IntVar x : vars) {
+					if (!x.isInstantiated()) {
+						estim *= x.getDomainSize() * k * 1.0 / remainingValueSet.size();
+						k++;
+					}
+				}
+				break;
+			default:
+				throw new IOException("Estimator undefined");
+			}
+			return estim;
 		}
 	}
 

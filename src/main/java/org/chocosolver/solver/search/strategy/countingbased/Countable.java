@@ -2,6 +2,7 @@ package org.chocosolver.solver.search.strategy.countingbased;
 
 import java.util.Map;
 
+import org.chocosolver.solver.search.strategy.countingbased.tools.CountingTools;
 import org.chocosolver.solver.search.strategy.countingbased.tools.IntVarAssignment;
 
 /**
@@ -24,8 +25,11 @@ public interface Countable {
 	 * 
 	 * @param estimator
 	 *            the estimator to count solutions
+	 * 
+	 * @param tools
+	 *            Counting tools that the countable propagator may use.
+	 * 
 	 */
-	public Map<IntVarAssignment, Double> computeDensities(String estimator);
-
+	public Map<IntVarAssignment, Double> computeDensities(String estimator, CountingTools tools);
 
 }
