@@ -1268,7 +1268,7 @@ public interface IIntConstraintFactory extends ISelf<Model> {
                 System.arraycopy(occurrences, 0, cards, 0, values.length);
                 for (int i = values.length; i < n2; i++) {
                     v2[i] = toAdd.get(i - values.length);
-                    cards[i] = vars[0].getModel().intVar(0);
+                    cards[i] = vars[0].getModel().intVar(0);//cards[i] = vars[0].getModel().intVar(0, vars.lenght);
                 }
                 return new GlobalCardinality(vars, v2, cards);
             } else {
