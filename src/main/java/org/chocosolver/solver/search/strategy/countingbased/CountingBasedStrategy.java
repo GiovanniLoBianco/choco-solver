@@ -104,7 +104,12 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 					countableList.add(castProp);
 				}
 		}
-		countableList.toArray(this.countables);
+		this.countables = new Countable[countableList.size()];
+		for(int k=0; k<countableList.size(); k++){
+			this.countables[k]=countableList.get(k);
+		}
+		
+		
 
 		this.tools = new CountingTools();
 	}

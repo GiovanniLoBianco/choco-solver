@@ -7,8 +7,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.chocosolver.solver.Model;
+import org.chocosolver.solver.constraints.nary.alldifferent.PropAllDiffAC;
 import org.chocosolver.solver.constraints.nary.globalcardinality.PropFastGCC;
-import org.chocosolver.solver.constraints.set.PropAllDiff;
 import org.chocosolver.solver.search.strategy.countingbased.tools.BinaryHeap;
 import org.chocosolver.solver.search.strategy.countingbased.tools.ComparablePair;
 import org.chocosolver.solver.search.strategy.countingbased.tools.IntVarAssignment;
@@ -30,7 +30,7 @@ public class MaxSD extends CountingBasedStrategy {
 
 		for (Countable c : this.getCountables()) {
 			Map<IntVarAssignment, Double> densities;
-			if (c instanceof PropAllDiff) {
+			if (c instanceof PropAllDiffAC) {
 				densities = c.computeDensities(this.getEstimatorAlldifferent(), this.getTools());
 			} else if (c instanceof PropFastGCC) {
 				densities = c.computeDensities(this.getEstimatorGCC(), this.getTools());
@@ -47,9 +47,9 @@ public class MaxSD extends CountingBasedStrategy {
 		// Sorted list of assignments in ascending order of densities
 		List<ComparablePair<IntVarAssignment, Double>> listAssignments = heap.read();
 
-		// In this set, we store the assignments that have already been dealt
+		// In this list, we store the assignments that have already been dealt
 		// with
-		Set<IntVarAssignment> alreadyStored = new HashSet<IntVarAssignment>();
+		List<IntVarAssignment> alreadyStored = new ArrayList<IntVarAssignment>();
 
 		// We start from the end to get the highest densities first
 		for (int k = listAssignments.size() - 1; k >= 0; k--) {

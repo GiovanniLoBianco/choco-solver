@@ -154,9 +154,9 @@ public class PropAllDiffAC extends Propagator<IntVar> implements Countable {
 	 * @param tools
 	 * @return an estimation of the number of remaining tupes for the current
 	 *         alldifferent constraint
-	 * @throws IOException
+	 * @throws IOException if the estimator is not defined
 	 */
-	private double estimateNbSolutions(String estimator, CountingTools tools) throws IOException {
+	public double estimateNbSolutions(String estimator, CountingTools tools) throws IOException {
 
 		if (this.isCompletelyInstantiated()) {
 			return 1.0;
@@ -174,7 +174,7 @@ public class PropAllDiffAC extends Propagator<IntVar> implements Countable {
 					}
 				}
 			}
-			int nbFakeValues = remainingValueSet.size() - nbRemainingVars;
+			int nbFakeVars = remainingValueSet.size() - nbRemainingVars;
 
 			// We compute the estimation depending on estimator
 			double estim = 1.0;
@@ -185,7 +185,7 @@ public class PropAllDiffAC extends Propagator<IntVar> implements Countable {
 						estim *= tools.computeBMFactors(x.getDomainSize());
 					}
 				}
-				for (int k = 1; k <= nbFakeValues; k++) {
+				for (int k = 1; k <= nbFakeVars; k++) {
 					estim *= tools.computeBMFactors(remainingValueSet.size()) / k;
 				}
 				break;
@@ -197,12 +197,12 @@ public class PropAllDiffAC extends Propagator<IntVar> implements Countable {
 					}
 				}
 				double p = sumDomain / (1.0 * nbRemainingVars * remainingValueSet.size());
-				for (int k = nbFakeValues + 1; k <= remainingValueSet.size(); k++) {
+				for (int k = nbFakeVars + 1; k <= remainingValueSet.size(); k++) {
 					estim *= p * k;
 				}
 				break;
 			case CountingEstimators.ALLDIFFERENT_FDS:
-				int k = nbFakeValues + 1;
+				int k = nbFakeVars + 1;
 				for (IntVar x : vars) {
 					if (!x.isInstantiated()) {
 						estim *= x.getDomainSize() * k * 1.0 / remainingValueSet.size();

@@ -28,8 +28,19 @@ public class IntVarAssignment {
 		return val;
 	}
 
-	public boolean equals(IntVarAssignment a) {
-		return a.getVar().equals(var) && a.getVal() == val;
+	
+	public boolean equals(Object o) {
+		if (o instanceof IntVarAssignment) {
+			IntVarAssignment a = (IntVarAssignment)o;
+			return a.getVar().getId()==var.getId() && a.getVal() == val;
+		} else {
+			return false;
+		}
 	}
+
+	public String toString() {
+		return var.getName() + "<-" + val;
+	}
+
 
 }
