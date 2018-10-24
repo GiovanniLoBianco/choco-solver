@@ -23,6 +23,8 @@ public interface Countable {
 	 * remaining solutions and, then, normalize it to obtain solution densities.
 	 * We only consider the variables from the propagator, not the whole model.
 	 * 
+	 * If it appears that the constraint cannot be satisfied, it returns null.
+	 * 
 	 * @param estimator
 	 *            the estimator to count solutions
 	 * 

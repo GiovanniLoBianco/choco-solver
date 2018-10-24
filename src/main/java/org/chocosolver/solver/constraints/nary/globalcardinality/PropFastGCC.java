@@ -30,6 +30,7 @@ import org.chocosolver.util.objects.setDataStructures.SetType;
 import org.chocosolver.util.tools.ArrayUtils;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -320,7 +321,7 @@ public class PropFastGCC extends Propagator<IntVar> implements Countable {
 		Map<IntVarAssignment, Double> map = new HashMap<IntVarAssignment, Double>();
 
 		IntVar[] vars = Arrays.copyOf(this.getVars(), n);
-		
+
 		// We try every possible assignment and we propagate. From the resulting
 		// state of the model, we estimate the number of remaining solutions.
 		for (IntVar var : vars) {
@@ -368,6 +369,12 @@ public class PropFastGCC extends Propagator<IntVar> implements Countable {
 
 				}
 
+				// If any instantiations of var lead to 0 solutions, then the
+				// constraint cannot be satisfied.
+				if (total == 0) {
+					return null;
+				}
+
 				// We put into map the solution densities for var
 				for (IntVarAssignment assignment : varMap.keySet()) {
 					map.put(assignment, varMap.get(assignment) / total);
@@ -377,9 +384,119 @@ public class PropFastGCC extends Propagator<IntVar> implements Countable {
 		return map;
 	}
 
-	private double estimateNbSolutions(String estimator, CountingTools tools) {
+	public double estimateNbSolutions(String estimator, CountingTools tools) {
 		// TODO Auto-generated method stub
-		return 0;
+
+		// Creation of array of variables of the problem
+		IntVar[] vars = Arrays.copyOf(this.getVars(), n);
+		
+		for(int i=0; i<this.getVars().length; i++){
+			System.out.println(this.getVars()[i]);
+			if(i==n-1){
+				System.out.println("----------------");
+			}
+		}
+
+		// Creation of the bitset of values of the union of the domains and
+		// correspoding lower and upper bounds
+		int minValue = vars[0].getLB();
+		int maxValue = vars[0].getUB();
+		for (int i = 1; i < n; i++) {
+			minValue = Math.min(vars[i].getLB(), minValue);
+			maxValue = Math.max(vars[i].getUB(), maxValue);
+		}
+
+		boolean[] valuesBitSet = new boolean[maxValue - minValue + 1];
+		int[] l = new int[maxValue - minValue + 1];
+		int[] u = new int[maxValue - minValue + 1];
+		for (int i = 0; i < n; i++) {
+			for (int y = vars[i].getLB(); y <= vars[i].getUB(); y = vars[i].nextValue(y)) {
+				valuesBitSet[y - minValue] = true;
+				u[y - minValue]++;// For now l[y]=0 and u[y]=nbNeighbors
+			}
+		}
+		// For the constrained values, we input the right bounds
+		for (int j = 0; j < values.length; j++) {
+			int val = values[j];
+			// We do not consider value for values if any domain contains it
+			if (val >= minValue && val <= maxValue) {
+				l[val - minValue] = this.getVar(n + j).getLB();
+				u[val - minValue] = this.getVar(n + j).getUB();
+			}
+		}
+
+		// We deal with fixed variables
+		for (int i = 0; i < n; i++) {
+			if (vars[i].isInstantiated()) {
+				int val = vars[i].getValue();
+				l[val - minValue]--;
+				if (l[val - minValue] < 0) {
+					l[val - minValue] = 0;
+				}
+				u[val - minValue]--;
+			}
+		}
+
+		// Number of values in the Lower Bound Graph
+		int nbValueLBG = 0;
+		for (int j = 0; j < values.length; j++) {
+			int val = values[j];
+			if (val >= minValue && val <= maxValue && l[val - minValue] > 0) {
+				nbValueLBG++;
+			}
+		}
+
+		return estimateLowerBound(vars, l, minValue, nbValueLBG, tools)
+				* estimateResidualUpperBound(vars, l, u, minValue, nbValueLBG, tools);
+	}
+
+	private double estimateLowerBound(IntVar[] vars, int[] l, int minValue, int nbValueLBG, CountingTools tools) {
+		// TODO Auto-generated method stub
+
+		// We compute a list of the number of neighbors for each variables that
+		// are in the Lower Bound Graph
+		ArrayList<Integer> listNbNeighbors = new ArrayList<Integer>();
+		for (int i = 0; i < vars.length; i++) {
+			if (!vars[i].isInstantiated()) {
+				int nbNeighbors = 0;
+				for (int y = vars[i].getLB(); y <= vars[i].getUB(); y = vars[i].nextValue(y)) {
+					nbNeighbors += l[y - minValue];
+				}
+				if (nbNeighbors > 0) {
+					listNbNeighbors.add(nbNeighbors);
+				}
+			}
+		}
+
+		// We compute the list of the factors for every value (and fake value).
+		// There must be as many elements in listNbNeighbors as in
+		// listRightFactors.
+		int nbFakeNodes = listNbNeighbors.size() - nbValueLBG;
+		ArrayList<Integer> listRightFactors = new ArrayList<Integer>();
+		for (int j = 0; j < l.length; j++) {
+			for (int k = 1; k <= l[j]; k++) {
+				listRightFactors.add(k);
+			}
+		}
+		for (int k = 1; k <= nbFakeNodes; k++) {
+			listRightFactors.add(k);
+		}
+
+		// We compute the product of every Bregman-Minc factors, dealing one by
+		// one with each symmetry, such that we do not have to compute numbers
+		// that are too big
+		double estim = 1.0;
+		for (int k = 0; k < listNbNeighbors.size(); k++) {
+			estim *= tools.computeBMFactors(listNbNeighbors.get(k) + nbFakeNodes) / listRightFactors.get(k);
+		}
+
+		return estim;
+	}
+
+	private double estimateResidualUpperBound(IntVar[] vars, int[] l, int[] u, int minValue, int nbValueLBG,
+			CountingTools tools) {
+		// TODO Auto-generated method stub
+		return 1.0;
 	}
 
 }
