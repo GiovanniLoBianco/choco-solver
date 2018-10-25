@@ -77,8 +77,16 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 	// Those following variables define the estimator that will be used on the
 	// concerned constraints
 	private String estimatorAlldifferent = CountingEstimators.ALLDIFFERENT_PQZ;
-	private String estimatorGCC = CountingEstimators.GCC_PQZ;
+	private String estimatorGCC = CountingEstimators.GCC_CORRECTION;
 
+	// A threshold to define if order need to updated
+	private double threshold = 1.0;
+
+	// The product of the size of the cartesian product of every domain (must be
+	// backtrackable)
+	private long sizeDomains;
+
+	// A decision that is trivially wrong and not refutable
 	private final IntDecision WRONG;
 
 	// ***********************************************************************************
@@ -113,10 +121,18 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 			this.countables[k] = countableList.get(k);
 		}
 
+		// We initialize the size of the domains
+		this.sizeDomains = 1;
+		for (IntVar x : model.retrieveIntVars(true)) {
+			this.sizeDomains *= x.getDomainSize();
+		}
+
 		this.tools = new CountingTools();
-		
+
 		WRONG = new IntDecision(pool);
 		WRONG.set(model.intVar(0), 1, DecisionOperatorFactory.makeIntEq());
+		// WRONG.rewind();
+		WRONG.setRefutable(false);
 	}
 
 	// ***********************************************************************************
@@ -125,25 +141,24 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 
 	public Decision<IntVar> getDecision() {
 
+		// We need to save the state of "next" and "order" in order to
+		// retrieve it when we will backtrack
+		int nextSave = next;
+		IntVarAssignment[] orderSave = order;
+		long sizeDomainsSave = sizeDomains;
+
 		// If it is the first decision we make or if the order list need to
 		// be updated, then we compute it
 		if (order == null || needUpdate()) {
 			computeOrder();
 			if (order == null) {
 				// This decision is wrong and cannot be refutable
-				WRONG.rewind();
-				WRONG.setRefutable(false);
 				return WRONG;
 			}
 			next = 0;
 		}
 
-		// We need to save the state of "next" and "order" in order to
-		// retrieve it when we will backtrack
-		int nextSave = next;
-		IntVarAssignment[] orderSave = order;
-
-		// Otherwise, we look for the next possible assignment in order. As
+		// We look for the next possible assignment in order. As
 		// we do not recompute the order array at each decision, some
 		// assignments might be impossible at this stage.
 		int k = next;
@@ -152,13 +167,6 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 			k++;
 		}
 		next = k;
-
-		String s = "";
-		for (int kk = Math.max(0, next-1); kk < (order.length > next + 3 ? next + 3 : order.length); kk++) {
-			s += order[kk] + ", ";
-		}
-		System.out.println(s);
-		System.out.println("Next : " + next);
 
 		// Initializing the decision pool
 		IntDecision d = pool.getE();
@@ -183,16 +191,12 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 			// Otherwise, we find the next decision
 			IntVarAssignment nextAssignment = order[next];
 			d.set(nextAssignment.getVar(), nextAssignment.getVal(), DecisionOperatorFactory.makeIntEq());
-			System.out.println("Decision : " + nextAssignment.getVar() + " " + nextAssignment.getVal());
-			System.out.println("--------------------------------");
 
+			// We define how we backtrack
 			model.getEnvironment().save(() -> {
 				this.next = nextSave;
 				this.order = orderSave;
-
-				System.out.println("BAAAAAAACKTRAAAAAACK !!");
-				System.out.println("Next : " + next);
-				System.out.println("--------------------------------");
+				this.sizeDomains = sizeDomainsSave;
 			});
 			return d;
 		}
@@ -205,15 +209,22 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 	abstract public void computeOrder();
 
 	/**
+	 * We consider that the order array needs to be updated if the ratio between
+	 * the last sizeDomains and the current sizeDomains is less than or equal to
+	 * the prefixed threshold
 	 * 
-	 * @return true if the order list need to be updated
+	 * @return true if the order array need to be updated
 	 */
 	public boolean needUpdate() {
-		/*
-		 * Random rnd = new Random(); double p = rnd.nextDouble(); if (p < 0.1)
-		 * { System.out.println("Needs update"); } return p < 0.1;
-		 */
+
 		return false;
+
+		/*
+		 * long current = 1; for (IntVar x : model.retrieveIntVars(true)) {
+		 * current *= x.getDomainSize(); } if (current * 1.0 / sizeDomains <=
+		 * threshold) { System.out.println("Update"); this.sizeDomains =
+		 * current; return true; } else { return false; }
+		 */
 	}
 
 	// ***********************************************************************************
@@ -242,6 +253,10 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 
 	public CountingTools getTools() {
 		return tools;
+	}
+
+	public void setThreshold(double t) {
+		this.threshold = t;
 	}
 
 }

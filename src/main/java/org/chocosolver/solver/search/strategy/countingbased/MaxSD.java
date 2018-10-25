@@ -37,6 +37,10 @@ public class MaxSD extends CountingBasedStrategy {
 			} else {
 				densities = c.computeDensities("", this.getTools());
 			}
+			if(densities ==null){
+				order=null;
+				return;
+			}
 			for (IntVarAssignment a : densities.keySet()) {
 				ComparablePair<IntVarAssignment, Double> pair = new ComparablePair<IntVarAssignment, Double>(a,
 						densities.get(a));

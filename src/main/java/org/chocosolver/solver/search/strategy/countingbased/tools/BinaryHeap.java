@@ -71,6 +71,7 @@ public class BinaryHeap<E extends Comparable<E>> {
 	public List<E> read() {
 		List<E> l = new ArrayList<E>();
 		this.inOrder(l);
+		System.out.println(l.size());
 		return l;
 	}
 

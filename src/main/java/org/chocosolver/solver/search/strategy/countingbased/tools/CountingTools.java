@@ -1,5 +1,7 @@
 package org.chocosolver.solver.search.strategy.countingbased.tools;
 
+import org.testng.reporters.jq.Main;
+
 /**
  * 
  * Tool class containing several methods used into counting algorithms
@@ -84,6 +86,10 @@ public class CountingTools {
 	 */
 	public double computeArrangement(int n, int k) {
 		return arrangements[n][k];
+	}
+	
+	public static void main(String[] args) {
+		CountingTools tools = new CountingTools();
 	}
 
 }

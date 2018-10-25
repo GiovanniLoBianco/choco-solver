@@ -17,6 +17,9 @@ import org.chocosolver.solver.constraints.Propagator;
 import org.chocosolver.solver.constraints.PropagatorPriority;
 import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.search.strategy.countingbased.Countable;
+import org.chocosolver.solver.search.strategy.countingbased.CountingEstimators;
+import org.chocosolver.solver.search.strategy.countingbased.tools.BinaryHeap;
+import org.chocosolver.solver.search.strategy.countingbased.tools.ComparablePair;
 import org.chocosolver.solver.search.strategy.countingbased.tools.CountingTools;
 import org.chocosolver.solver.search.strategy.countingbased.tools.IntVarAssignment;
 import org.chocosolver.solver.variables.IntVar;
@@ -32,8 +35,10 @@ import org.chocosolver.util.tools.ArrayUtils;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -318,6 +323,8 @@ public class PropFastGCC extends Propagator<IntVar> implements Countable {
 		// TODO Auto-generated method stub
 		// Map containing the solution densities for each possible assignment
 		// variable/value.
+		
+		
 		Map<IntVarAssignment, Double> map = new HashMap<IntVarAssignment, Double>();
 
 		IntVar[] vars = Arrays.copyOf(this.getVars(), n);
@@ -390,12 +397,13 @@ public class PropFastGCC extends Propagator<IntVar> implements Countable {
 		// Creation of array of variables of the problem
 		IntVar[] vars = Arrays.copyOf(this.getVars(), n);
 		
+	/*	System.out.println("-----------------------------------------------");
 		for(int i=0; i<this.getVars().length; i++){
-			System.out.println(this.getVars()[i]);
+			System.out.println(this.getVar(i));
 			if(i==n-1){
-				System.out.println("----------------");
+				System.out.println("----");
 			}
-		}
+		}*/
 
 		// Creation of the bitset of values of the union of the domains and
 		// correspoding lower and upper bounds
@@ -442,14 +450,23 @@ public class PropFastGCC extends Propagator<IntVar> implements Countable {
 		for (int j = 0; j < values.length; j++) {
 			int val = values[j];
 			if (val >= minValue && val <= maxValue && l[val - minValue] > 0) {
-				nbValueLBG++;
+				nbValueLBG+=l[val - minValue];
 			}
 		}
 
 		return estimateLowerBound(vars, l, minValue, nbValueLBG, tools)
-				* estimateResidualUpperBound(vars, l, u, minValue, nbValueLBG, tools);
+				* estimateResidualUpperBound(vars, l, u, minValue, nbValueLBG, estimator, tools);
 	}
 
+	/**
+	 * 
+	 * @param vars
+	 * @param l
+	 * @param minValue
+	 * @param nbValueLBG
+	 * @param tools
+	 * @return an estimation of the number of perfect matching in the Lower Bound Graph
+	 */
 	private double estimateLowerBound(IntVar[] vars, int[] l, int minValue, int nbValueLBG, CountingTools tools) {
 		// TODO Auto-generated method stub
 
@@ -472,6 +489,9 @@ public class PropFastGCC extends Propagator<IntVar> implements Countable {
 		// There must be as many elements in listNbNeighbors as in
 		// listRightFactors.
 		int nbFakeNodes = listNbNeighbors.size() - nbValueLBG;
+		if(nbFakeNodes<0){
+			return 0;
+		}
 		ArrayList<Integer> listRightFactors = new ArrayList<Integer>();
 		for (int j = 0; j < l.length; j++) {
 			for (int k = 1; k <= l[j]; k++) {
@@ -489,14 +509,112 @@ public class PropFastGCC extends Propagator<IntVar> implements Countable {
 		for (int k = 0; k < listNbNeighbors.size(); k++) {
 			estim *= tools.computeBMFactors(listNbNeighbors.get(k) + nbFakeNodes) / listRightFactors.get(k);
 		}
+		
 
 		return estim;
 	}
 
+	/**
+	 * 
+	 * @param vars
+	 * @param l
+	 * @param u
+	 * @param minValue
+	 * @param nbValueLBG
+	 * @param estimator
+	 * @param tools
+	 * @return an estimation of the number of perfect matching in the Residual Upper Bound Graph
+	 */
 	private double estimateResidualUpperBound(IntVar[] vars, int[] l, int[] u, int minValue, int nbValueLBG,
-			CountingTools tools) {
+			String estimator, CountingTools tools) {
 		// TODO Auto-generated method stub
-		return 1.0;
+
+		// We store the variables from the Upper Bound Graph and their degrees
+		// in a binary heap, so we can sort them
+		BinaryHeap<ComparablePair<IntVar, Integer>> heap = new BinaryHeap<ComparablePair<IntVar, Integer>>();
+		for (int i = 0; i < vars.length; i++) {
+			if (!vars[i].isInstantiated()) {
+				int nbNeighbors = 0;
+				for (int y = vars[i].getLB(); y <= vars[i].getUB(); y = vars[i].nextValue(y)) {
+					nbNeighbors += u[y - minValue] - l[y - minValue];
+				}
+				if (nbNeighbors > 0) {
+					heap.add(new ComparablePair<IntVar, Integer>(vars[i], nbNeighbors));
+				}
+			}
+		}
+
+		// We sort the variables by their degree in ascending order
+		List<ComparablePair<IntVar, Integer>> orderedListDegrees = heap.read();
+
+		// We store the variables that are in the residual upper bound graph and
+		// their degrees
+		ArrayList<IntVar> residualVars = new ArrayList<IntVar>();
+		ArrayList<Integer> residualDegrees = new ArrayList<Integer>();
+		for (int i = nbValueLBG; i < orderedListDegrees.size(); i++) {
+			residualVars.add(orderedListDegrees.get(i).getItem());
+			residualDegrees.add(orderedListDegrees.get(i).getComparable());
+		}
+
+		// We count the number of value nodes in the Residual Upper Bound
+		// Graph and we store in remainingValuesOccurrences the number of
+		// occurrences of each remaining values
+		boolean[] remainingValues = new boolean[u.length];
+		ArrayList<Integer> remainingValuesOccurrences = new ArrayList<Integer>();
+		int nbResidualRightNodes = 0;
+		for (int i = 0; i < residualVars.size(); i++) {
+			IntVar x = residualVars.get(i);
+			for (int y = x.getLB(); y <= x.getUB(); y = x.nextValue(y)) {
+				if (!remainingValues[y - minValue]) {
+					remainingValues[y - minValue] = true;
+					nbResidualRightNodes += u[y - minValue] - l[y - minValue];
+					remainingValuesOccurrences.add(u[y - minValue] - l[y - minValue]);
+				}
+			}
+		}
+
+		
+		// We compute an estimation of the number of perfect matchings in the
+		// Residual Upper Bound Graph
+		int nbFakeVariables = nbResidualRightNodes - residualVars.size();
+		if(nbFakeVariables<0){
+			return 0;
+		}
+		double estim = 1.0;
+		for (int deg : residualDegrees) {
+			estim *= tools.computeBMFactors(deg);
+		}
+		// We deal with fake variables symmetry iteratively
+		for (int k = 1; k <= nbFakeVariables; k++) {
+			estim *= tools.computeBMFactors(nbResidualRightNodes) / k;
+		}
+		// We deal with valued duplication symmetry depending on the estimator
+		switch (estimator) {
+		case CountingEstimators.GCC_PQZ:
+			for (int j = 0; j < remainingValuesOccurrences.size(); j++) {
+				int occ = remainingValuesOccurrences.get(j);
+				estim /= tools.computeFactorial(occ);
+			}
+			break;
+		case CountingEstimators.GCC_CORRECTION:
+			Collections.sort(remainingValuesOccurrences);
+			int remainingSlots = residualVars.size();
+			int index = 0;
+			while (remainingSlots > 0) {
+				if (remainingSlots >= remainingValuesOccurrences.get(index)) {
+					estim /= tools.computeBMFactors(remainingValuesOccurrences.get(index));
+					remainingSlots -= remainingValuesOccurrences.get(index);
+					index++;
+				} else {
+					estim /= tools.computeArrangement(remainingValuesOccurrences.get(index), remainingSlots);
+					remainingSlots = 0;
+				}
+			}
+			break;
+		}
+
+		return estim;
+
 	}
 
 }

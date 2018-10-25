@@ -212,12 +212,7 @@ public class PropAllDiffACCountingTest {
 			e.printStackTrace();
 		}
 	}
-	
-	@Test
-	public void testComputeDensities(){
-		//TODO
-		
-	}
+
 
 
 }
