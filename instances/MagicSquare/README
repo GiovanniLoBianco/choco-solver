@@ -1,0 +1,12 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Magic Square Instance Format         %
+%                                      %
+% Gilles Pesant            August 2011 %
+%                                      %
+% gilles.pesant@cirrelt.ca             %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+squareSize 
+nb of fixed cells
+for each fixed cell
+  row column value
