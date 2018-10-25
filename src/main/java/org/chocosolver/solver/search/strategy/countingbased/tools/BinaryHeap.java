@@ -1,3 +1,11 @@
+/**
+ * This file is part of choco-solver, http://choco-solver.org/
+ *
+ * Copyright (c) 2018, IMT Atlantique. All rights reserved.
+ *
+ * Licensed under the BSD 4-clause license.
+ * See LICENSE file in the project root for full license information.
+ */
 package org.chocosolver.solver.search.strategy.countingbased.tools;
 
 import java.util.ArrayList;
@@ -71,7 +79,6 @@ public class BinaryHeap<E extends Comparable<E>> {
 	public List<E> read() {
 		List<E> l = new ArrayList<E>();
 		this.inOrder(l);
-		System.out.println(l.size());
 		return l;
 	}
 
