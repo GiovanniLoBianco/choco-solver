@@ -11,6 +11,7 @@ package org.chocosolver.solver.search.strategy.countingbased;
 import static org.testng.Assert.assertEquals;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -21,6 +22,7 @@ import org.chocosolver.solver.search.strategy.countingbased.tools.CountingTools;
 import org.chocosolver.solver.search.strategy.countingbased.tools.IntVarAssignment;
 import org.chocosolver.solver.variables.IntVar;
 import org.testng.annotations.Test;
+import org.testng.reporters.jq.Main;
 
 public class CountingBasedStrategyTest {
 
@@ -99,6 +101,60 @@ public class CountingBasedStrategyTest {
 			assertEquals(maxSD.order[k], listInst.get(k));
 		}
 
+	}
+
+	public static void minSDTest() {
+		Model model = buildModel();
+		IntVar[] vars = model.retrieveIntVars(true);
+		MinSD minSD = new MinSD(model);
+		minSD.computeOrder();
+		List<IntVarAssignment> listInst = new ArrayList<IntVarAssignment>();
+
+		listInst.add(new IntVarAssignment(vars[6], 4));
+		listInst.add(new IntVarAssignment(vars[4], 4));
+		listInst.add(new IntVarAssignment(vars[0], 4));
+
+		listInst.add(new IntVarAssignment(vars[6], 1));
+		listInst.add(new IntVarAssignment(vars[3], 4));
+		listInst.add(new IntVarAssignment(vars[6], 5));
+
+		listInst.add(new IntVarAssignment(vars[3], 3));
+		listInst.add(new IntVarAssignment(vars[7], 1));
+		listInst.add(new IntVarAssignment(vars[7], 6));
+
+		listInst.add(new IntVarAssignment(vars[3], 6));
+		listInst.add(new IntVarAssignment(vars[0], 6));
+		listInst.add(new IntVarAssignment(vars[4], 6));
+
+		listInst.add(new IntVarAssignment(vars[5], 4));
+		listInst.add(new IntVarAssignment(vars[3], 5));
+		listInst.add(new IntVarAssignment(vars[1], 4));
+
+		listInst.add(new IntVarAssignment(vars[5], 5));
+		listInst.add(new IntVarAssignment(vars[2], 5));
+		listInst.add(new IntVarAssignment(vars[3], 3));
+
+		listInst.add(new IntVarAssignment(vars[4], 1));
+		listInst.add(new IntVarAssignment(vars[3], 5));
+		listInst.add(new IntVarAssignment(vars[5], 3));
+
+		listInst.add(new IntVarAssignment(vars[6], 2));
+		listInst.add(new IntVarAssignment(vars[7], 7));
+		listInst.add(new IntVarAssignment(vars[0], 2));
+		
+		listInst.add(new IntVarAssignment(vars[4], 1));
+		listInst.add(new IntVarAssignment(vars[2], 7));
+		listInst.add(new IntVarAssignment(vars[1], 3));
+		
+
+		for (int k = 0; k < listInst.size(); k++) {
+			assertEquals(minSD.order[k], listInst.get(k));
+		}
+
+	}
+	
+	public static void main(String[] args) {
+		minSDTest();
 	}
 
 }

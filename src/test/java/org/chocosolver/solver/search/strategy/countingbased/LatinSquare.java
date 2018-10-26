@@ -76,7 +76,7 @@ public class LatinSquare extends Square {
 	@Override
 	public void setCBSStrategy(String cas) {
 		// TODO Auto-generated method stub
-		MaxSD strat = new MaxSD(model);
+		AverageSD strat = new AverageSD(model);
 		this.getModel().getSolver().setSearch(strat);
 		
 

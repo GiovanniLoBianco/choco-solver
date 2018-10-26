@@ -84,15 +84,8 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 
 	// Those following variables define the estimator that will be used on the
 	// concerned constraints
-	private String estimatorAlldifferent = CountingEstimators.ALLDIFFERENT_PQZ;
+	private String estimatorAlldifferent = CountingEstimators.ALLDIFFERENT_FDS;
 	private String estimatorGCC = CountingEstimators.GCC_CORRECTION;
-
-	// A threshold to define if order need to updated
-	private double threshold = 1.0;
-
-	// The product of the size of the cartesian product of every domain (must be
-	// backtrackable)
-	private long sizeDomains;
 
 	// A decision that is trivially wrong and not refutable
 	private final IntDecision WRONG;
@@ -129,12 +122,6 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 			this.countables[k] = countableList.get(k);
 		}
 
-		// We initialize the size of the domains
-		this.sizeDomains = 1;
-		for (IntVar x : model.retrieveIntVars(true)) {
-			this.sizeDomains *= x.getDomainSize();
-		}
-
 		this.tools = new CountingTools();
 
 		WRONG = new IntDecision(pool);
@@ -153,11 +140,10 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 		// retrieve it when we will backtrack
 		int nextSave = next;
 		IntVarAssignment[] orderSave = order;
-		long sizeDomainsSave = sizeDomains;
 
 		// If it is the first decision we make or if the order list need to
 		// be updated, then we compute it
-		if (order == null || needUpdate()) {
+		if (needUpdate()) {
 			computeOrder();
 			if (order == null) {
 				// This decision is wrong and cannot be refutable
@@ -204,7 +190,6 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 			model.getEnvironment().save(() -> {
 				this.next = nextSave;
 				this.order = orderSave;
-				this.sizeDomains = sizeDomainsSave;
 			});
 			return d;
 		}
@@ -217,22 +202,22 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 	abstract public void computeOrder();
 
 	/**
-	 * We consider that the order array needs to be updated if the ratio between
-	 * the last sizeDomains and the current sizeDomains is less than or equal to
-	 * the prefixed threshold
+	 * We consider that the order array needs to be updated if the depth is big
+	 * enough
 	 * 
 	 * @return true if the order array need to be updated
 	 */
 	public boolean needUpdate() {
 
-		return false;
+		return order==null;
+	/*	if (order == null) {
+			return true;
+		}
+		double r = model.getSolver().getCurrentDepth() / 10.0;
+		long q = model.getSolver().getCurrentDepth() / 10;
 
-		/*
-		 * long current = 1; for (IntVar x : model.retrieveIntVars(true)) {
-		 * current *= x.getDomainSize(); } if (current * 1.0 / sizeDomains <=
-		 * threshold) { System.out.println("Update"); this.sizeDomains =
-		 * current; return true; } else { return false; }
-		 */
+		return r - q == 0;*/
+
 	}
 
 	// ***********************************************************************************
@@ -261,10 +246,6 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 
 	public CountingTools getTools() {
 		return tools;
-	}
-
-	public void setThreshold(double t) {
-		this.threshold = t;
 	}
 
 }

@@ -18,7 +18,7 @@ package org.chocosolver.solver.search.strategy.countingbased.tools;
  */
 public class CountingTools {
 
-	public static final int SIZE = 1000;
+	public static final int SIZE = 10000;
 	public static final int SIZE_FACT = 171;
 
 	private double[] factorsBM = new double[SIZE];

@@ -134,9 +134,8 @@ public class PropFastGCCCountingTest {
 
 	public static void main(String[] args) {
 		CountingTools tools = new CountingTools();
-		System.out.println("ça commence");
 		int n = 20;
-		int m = 200;
+		int m = 20;
 		double p = 0.9;
 
 		Random rnd = new Random();
@@ -158,8 +157,9 @@ public class PropFastGCCCountingTest {
 		
 		try {
 			prop.propagate(PropagatorEventType.FULL_PROPAGATION.getMask());
-			
-			System.out.println(prop.estimateNbSolutions(CountingEstimators.GCC_CORRECTION, tools));
+		
+		//	System.out.println(prop.estimateNbSolutions(CountingEstimators.GCC_CORRECTION, tools));
+			System.out.println(prop.computeDensities(CountingEstimators.GCC_PQZ, tools));
 		} catch (ContradictionException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

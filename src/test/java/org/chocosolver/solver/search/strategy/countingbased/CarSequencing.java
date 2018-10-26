@@ -133,6 +133,7 @@ public class CarSequencing extends AbstractProblem {
 	@Override
 	public void configureSearch() {
 		MaxSD maxSD_new = new MaxSD(model);
+		maxSD_new.setEstimatorAlldifferent(CountingEstimators.GCC_CORRECTION);
 		model.getSolver().setSearch(maxSD_new);
 		// model.getSolver().setSearch(inputOrderLBSearch(cars));
 
