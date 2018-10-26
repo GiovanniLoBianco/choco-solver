@@ -323,8 +323,7 @@ public class PropFastGCC extends Propagator<IntVar> implements Countable {
 		// TODO Auto-generated method stub
 		// Map containing the solution densities for each possible assignment
 		// variable/value.
-		
-		
+
 		Map<IntVarAssignment, Double> map = new HashMap<IntVarAssignment, Double>();
 
 		IntVar[] vars = Arrays.copyOf(this.getVars(), n);
@@ -343,48 +342,63 @@ public class PropFastGCC extends Propagator<IntVar> implements Countable {
 				// the sum of every estimation made on var.
 				double total = 0;
 
+				// If we compute an estimation that is too big (infinity, we do
+				// not consider every instantiations densisties associated to
+				// the current variable var
+				boolean haveEncounteredInfinity = false;
+
 				for (int val = var.getLB(); val <= var.getUB(); val = var.nextValue(val)) {
 
-					// We save the state of the solver, so we can backtrack
-					// after testing var<-val
-					this.getModel().getEnvironment().worldPush();
+					if (!haveEncounteredInfinity) {
+						// We save the state of the solver, so we can backtrack
+						// after testing var<-val
+						this.getModel().getEnvironment().worldPush();
 
-					try {
-						var.instantiateTo(val, Cause.Null);
+						try {
+							var.instantiateTo(val, Cause.Null);
 
-						// We force GAC after the instantiation
-						Constraint c = this.getConstraint();
-						for (Propagator p : c.getPropagators()) {
-							p.propagate(PropagatorEventType.FULL_PROPAGATION.getMask());
+							// We force GAC after the instantiation
+							Constraint c = this.getConstraint();
+							for (Propagator p : c.getPropagators()) {
+								p.propagate(PropagatorEventType.FULL_PROPAGATION.getMask());
+							}
+
+							// We compute an estimation of the number of
+							// remaining
+							// solutions and we update total and varMap
+							double estimNbRemainingSolutions = estimateNbSolutions(estimator, tools);
+							if (Double.isInfinite(estimNbRemainingSolutions)) {
+								haveEncounteredInfinity = true;
+							} else {
+								varMap.put(new IntVarAssignment(var, val), estimNbRemainingSolutions);
+								total += estimNbRemainingSolutions;
+							}
+
+						} catch (ContradictionException e) {
+							// TODO Auto-generated catch block
+							// e.printStackTrace();
 						}
 
-						// We compute an estimation of the number of remaining
-						// solutions and we update total and varMap
-						double estimNbRemainingSolutions = estimateNbSolutions(estimator, tools);
-						varMap.put(new IntVarAssignment(var, val), estimNbRemainingSolutions);
-						total += estimNbRemainingSolutions;
+						// We delete the Event Queue in the propafation engine
+						// and
+						// we backtrack
+						this.getModel().getSolver().getEngine().ignoreModifications();
+						this.getModel().getEnvironment().worldPop();
 
-					} catch (ContradictionException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
 					}
 
-					// We delete the Event Queue in the propafation engine and
-					// we backtrack
-					this.getModel().getSolver().getEngine().ignoreModifications();
-					this.getModel().getEnvironment().worldPop();
+					if (!haveEncounteredInfinity) {
+						// If any instantiations of var lead to 0 solutions,
+						// then the constraint cannot be satisfied.
+						if (total == 0) {
+							return null;
+						}
 
-				}
-
-				// If any instantiations of var lead to 0 solutions, then the
-				// constraint cannot be satisfied.
-				if (total == 0) {
-					return null;
-				}
-
-				// We put into map the solution densities for var
-				for (IntVarAssignment assignment : varMap.keySet()) {
-					map.put(assignment, varMap.get(assignment) / total);
+						// We put into map the solution densities for var
+						for (IntVarAssignment assignment : varMap.keySet()) {
+							map.put(assignment, varMap.get(assignment) / total);
+						}
+					}
 				}
 			}
 		}
@@ -396,14 +410,13 @@ public class PropFastGCC extends Propagator<IntVar> implements Countable {
 
 		// Creation of array of variables of the problem
 		IntVar[] vars = Arrays.copyOf(this.getVars(), n);
-		
-	/*	System.out.println("-----------------------------------------------");
-		for(int i=0; i<this.getVars().length; i++){
-			System.out.println(this.getVar(i));
-			if(i==n-1){
-				System.out.println("----");
-			}
-		}*/
+
+		/*
+		 * System.out.println("-----------------------------------------------")
+		 * ; for(int i=0; i<this.getVars().length; i++){
+		 * System.out.println(this.getVar(i)); if(i==n-1){
+		 * System.out.println("----"); } }
+		 */
 
 		// Creation of the bitset of values of the union of the domains and
 		// correspoding lower and upper bounds
@@ -450,7 +463,7 @@ public class PropFastGCC extends Propagator<IntVar> implements Countable {
 		for (int j = 0; j < values.length; j++) {
 			int val = values[j];
 			if (val >= minValue && val <= maxValue && l[val - minValue] > 0) {
-				nbValueLBG+=l[val - minValue];
+				nbValueLBG += l[val - minValue];
 			}
 		}
 
@@ -465,7 +478,8 @@ public class PropFastGCC extends Propagator<IntVar> implements Countable {
 	 * @param minValue
 	 * @param nbValueLBG
 	 * @param tools
-	 * @return an estimation of the number of perfect matching in the Lower Bound Graph
+	 * @return an estimation of the number of perfect matching in the Lower
+	 *         Bound Graph
 	 */
 	private double estimateLowerBound(IntVar[] vars, int[] l, int minValue, int nbValueLBG, CountingTools tools) {
 		// TODO Auto-generated method stub
@@ -489,7 +503,7 @@ public class PropFastGCC extends Propagator<IntVar> implements Countable {
 		// There must be as many elements in listNbNeighbors as in
 		// listRightFactors.
 		int nbFakeNodes = listNbNeighbors.size() - nbValueLBG;
-		if(nbFakeNodes<0){
+		if (nbFakeNodes < 0) {
 			return 0;
 		}
 		ArrayList<Integer> listRightFactors = new ArrayList<Integer>();
@@ -509,7 +523,6 @@ public class PropFastGCC extends Propagator<IntVar> implements Countable {
 		for (int k = 0; k < listNbNeighbors.size(); k++) {
 			estim *= tools.computeBMFactors(listNbNeighbors.get(k) + nbFakeNodes) / listRightFactors.get(k);
 		}
-		
 
 		return estim;
 	}
@@ -523,7 +536,8 @@ public class PropFastGCC extends Propagator<IntVar> implements Countable {
 	 * @param nbValueLBG
 	 * @param estimator
 	 * @param tools
-	 * @return an estimation of the number of perfect matching in the Residual Upper Bound Graph
+	 * @return an estimation of the number of perfect matching in the Residual
+	 *         Upper Bound Graph
 	 */
 	private double estimateResidualUpperBound(IntVar[] vars, int[] l, int[] u, int minValue, int nbValueLBG,
 			String estimator, CountingTools tools) {
@@ -573,11 +587,10 @@ public class PropFastGCC extends Propagator<IntVar> implements Countable {
 			}
 		}
 
-		
 		// We compute an estimation of the number of perfect matchings in the
 		// Residual Upper Bound Graph
 		int nbFakeVariables = nbResidualRightNodes - residualVars.size();
-		if(nbFakeVariables<0){
+		if (nbFakeVariables < 0) {
 			return 0;
 		}
 		double estim = 1.0;

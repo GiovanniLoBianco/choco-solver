@@ -103,45 +103,61 @@ public class PropAllDiffAC extends Propagator<IntVar> implements Countable {
 				// the sum of every estimation made on var.
 				double total = 0;
 
+				// If we compute an estimation that is too big (infinity, we do
+				// not consider every instantiations densisties associated to
+				// the current variable var
+				boolean haveEncounteredInfinity = false;
+
 				for (int val = var.getLB(); val <= var.getUB(); val = var.nextValue(val)) {
 
-					// We save the state of the solver, so we can backtrack
-					// after testing var<-val
-					this.getModel().getEnvironment().worldPush();
+					if (!haveEncounteredInfinity) {
 
-					try {
-						var.instantiateTo(val, Cause.Null);
+						// We save the state of the solver, so we can backtrack
+						// after testing var<-val
+						this.getModel().getEnvironment().worldPush();
 
-						// We force GAC after the instantiation
-						Constraint c = this.getConstraint();
-						for (Propagator p : c.getPropagators()) {
-							p.propagate(PropagatorEventType.FULL_PROPAGATION.getMask());
+						try {
+							var.instantiateTo(val, Cause.Null);
+
+							// We force GAC after the instantiation
+							Constraint c = this.getConstraint();
+							for (Propagator p : c.getPropagators()) {
+								p.propagate(PropagatorEventType.FULL_PROPAGATION.getMask());
+							}
+
+							// We compute an estimation of the number of
+							// remaining
+							// solutions and we update total and varMap
+							double estimNbRemainingSolutions = estimateNbSolutions(estimator, tools);
+							if (Double.isInfinite(estimNbRemainingSolutions)) {
+								haveEncounteredInfinity = true;
+							} else {
+								varMap.put(new IntVarAssignment(var, val), estimNbRemainingSolutions);
+								total += estimNbRemainingSolutions;
+							}
+
+						} catch (ContradictionException e) {
+							// TODO Auto-generated catch block
+							// e.printStackTrace();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
 						}
 
-						// We compute an estimation of the number of remaining
-						// solutions and we update total and varMap
-						double estimNbRemainingSolutions = estimateNbSolutions(estimator, tools);
-						varMap.put(new IntVarAssignment(var, val), estimNbRemainingSolutions);
-						total += estimNbRemainingSolutions;
+						// We delete the Event Queue in the propafation engine
+						// and
+						// we backtrack
+						this.getModel().getSolver().getEngine().ignoreModifications();
+						this.getModel().getEnvironment().worldPop();
 
-					} catch (ContradictionException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						if (!haveEncounteredInfinity) {
+							// We put into map the solution densities for var
+							for (IntVarAssignment assignment : varMap.keySet()) {
+								map.put(assignment, varMap.get(assignment) / total);
+							}
+						}
 					}
 
-					// We delete the Event Queue in the propafation engine and
-					// we backtrack
-					this.getModel().getSolver().getEngine().ignoreModifications();
-					this.getModel().getEnvironment().worldPop();
-
-				}
-
-				// We put into map the solution densities for var
-				for (IntVarAssignment assignment : varMap.keySet()) {
-					map.put(assignment, varMap.get(assignment) / total);
 				}
 			}
 		}
@@ -154,7 +170,8 @@ public class PropAllDiffAC extends Propagator<IntVar> implements Countable {
 	 * @param tools
 	 * @return an estimation of the number of remaining tupes for the current
 	 *         alldifferent constraint
-	 * @throws IOException if the estimator is not defined
+	 * @throws IOException
+	 *             if the estimator is not defined
 	 */
 	public double estimateNbSolutions(String estimator, CountingTools tools) throws IOException {
 
