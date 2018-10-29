@@ -9,12 +9,17 @@
 package org.chocosolver.solver.constraints.nary.alldifferent;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.chocosolver.solver.Cause;
+import org.chocosolver.solver.Model;
+import org.chocosolver.solver.Solution;
 import org.chocosolver.solver.constraints.Constraint;
 import org.chocosolver.solver.constraints.Propagator;
 import org.chocosolver.solver.constraints.PropagatorPriority;
@@ -227,11 +232,38 @@ public class PropAllDiffAC extends Propagator<IntVar> implements Countable {
 					}
 				}
 				break;
+			case CountingEstimators.ALLDIFFERENT_EXACT:
+				estim = exactNbSolutions();
+				break;
 			default:
 				throw new IOException("Estimator undefined");
 			}
 			return estim;
 		}
+	}
+
+	/**
+	 * 
+	 * @return the exact number of remaining tuples of the current constraint
+	 */
+	public int exactNbSolutions() {
+		Model m = new Model();
+		IntVar[] vars = new IntVar[this.getNbVars()];
+		for (int k = 0; k < vars.length; k++) {
+			IntVar x = this.getVar(k);
+			ArrayList<Integer> dom = new ArrayList<Integer>();
+			for (int y = x.getLB(); y <= x.getUB(); y = x.nextValue(y)) {
+				dom.add(y);
+			}
+			int[] domain = new int[dom.size()];
+			for (int i = 0; i < dom.size(); i++) {
+				domain[i] = dom.get(i);
+			}
+			vars[k] = m.intVar(domain);
+		}
+		m.allDifferent(vars).post();
+		List<Solution> sols = m.getSolver().findAllSolutions();
+		return sols.size();
 	}
 
 }

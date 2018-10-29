@@ -125,41 +125,36 @@ public class PropFastGCCCountingTest {
 		
 		return (GlobalCardinality) model.globalCardinality(vars, values, cards, false);
 	}
-	
-	
-	
-	@Test
-	public void f() {
-	}
+
 
 	public static void main(String[] args) {
 		CountingTools tools = new CountingTools();
-		int n = 20;
-		int m = 20;
-		double p = 0.9;
-
-		Random rnd = new Random();
-		long seed = rnd.nextLong();
-		System.out.println("SEED : " + seed);
-
-		Model model = generateRandomValueGraph(n, m, p, seed);
-
-		IntVar[] vars = model.retrieveIntVars(true);
-
-		int[] vals = new int[m];
-		for (int j = 0; j < m; j++) {
-			vals[j] = j;
-		}
-		GlobalCardinality gcc = generateRandomGCC(model, vars, vals, seed);
+//		int n = 20;
+//		int m = 20;
+//		double p = 0.9;
+//
+//		Random rnd = new Random();
+//		long seed = rnd.nextLong();
+//		System.out.println("SEED : " + seed);
+//
+//		Model model = generateRandomValueGraph(n, m, p, seed);
+//
+//		IntVar[] vars = model.retrieveIntVars(true);
+//
+//		int[] vals = new int[m];
+//		for (int j = 0; j < m; j++) {
+//			vals[j] = j;
+//		}
+//		GlobalCardinality gcc = generateRandomGCC(model, vars, vals, seed);
 		
-		//GlobalCardinality gcc = generateInstance1();
+		GlobalCardinality gcc = generateInstance1();
 		PropFastGCC prop = (PropFastGCC) gcc.getPropagator(0);
 		
 		try {
 			prop.propagate(PropagatorEventType.FULL_PROPAGATION.getMask());
 		
-		//	System.out.println(prop.estimateNbSolutions(CountingEstimators.GCC_CORRECTION, tools));
-			System.out.println(prop.computeDensities(CountingEstimators.GCC_PQZ, tools));
+			System.out.println(prop.estimateNbSolutions(CountingEstimators.GCC_EXACT, tools));
+
 		} catch (ContradictionException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

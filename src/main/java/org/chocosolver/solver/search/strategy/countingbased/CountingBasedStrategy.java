@@ -49,6 +49,15 @@ import org.chocosolver.util.PoolManager;
 public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 
 	// ***********************************************************************************
+	// CONSTANTS
+	// ***********************************************************************************
+
+	// Constants for update settings
+	private static final String NEVER_UPDATE = "Never Update";
+	private static final String ALWAYS_UPDATE = "Always Update";
+	private static final String SOMETIMES_UPDATE = "Sometimes Update";
+
+	// ***********************************************************************************
 	// VARIABLES
 	// ***********************************************************************************
 
@@ -89,6 +98,8 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 
 	// A decision that is trivially wrong and not refutable
 	private final IntDecision WRONG;
+
+	private String updateOption = SOMETIMES_UPDATE;
 
 	// ***********************************************************************************
 	// CONSTRUCTORS
@@ -209,14 +220,22 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 	 */
 	public boolean needUpdate() {
 
-		return order==null;
-	/*	if (order == null) {
+		switch (updateOption) {
+		case NEVER_UPDATE:
+			return order == null;
+		case ALWAYS_UPDATE:
 			return true;
-		}
-		double r = model.getSolver().getCurrentDepth() / 10.0;
-		long q = model.getSolver().getCurrentDepth() / 10;
+		case SOMETIMES_UPDATE:
+			if (order == null) {
+				return true;
+			}
+			double r = model.getSolver().getCurrentDepth() / 10.0;
+			long q = model.getSolver().getCurrentDepth() / 10;
 
-		return r - q == 0;*/
+			return r - q == 0;
+		default:
+			return order == null;
+		}
 
 	}
 
@@ -246,6 +265,10 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 
 	public CountingTools getTools() {
 		return tools;
+	}
+
+	public void setUpdateOption(String option) {
+		this.updateOption = option;
 	}
 
 }

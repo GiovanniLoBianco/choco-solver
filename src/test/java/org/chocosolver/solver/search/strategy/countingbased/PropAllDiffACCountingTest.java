@@ -22,6 +22,7 @@ import org.chocosolver.solver.search.strategy.countingbased.tools.IntVarAssignme
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.solver.variables.events.PropagatorEventType;
 import org.testng.annotations.Test;
+import org.testng.reporters.jq.Main;
 
 public class PropAllDiffACCountingTest {
 
@@ -220,7 +221,5 @@ public class PropAllDiffACCountingTest {
 			e.printStackTrace();
 		}
 	}
-
-
 
 }
