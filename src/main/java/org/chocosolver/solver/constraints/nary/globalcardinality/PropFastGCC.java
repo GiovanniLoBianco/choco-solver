@@ -33,6 +33,7 @@ import org.chocosolver.util.objects.setDataStructures.ISetIterator;
 import org.chocosolver.util.objects.setDataStructures.SetFactory;
 import org.chocosolver.util.objects.setDataStructures.SetType;
 import org.chocosolver.util.tools.ArrayUtils;
+import org.testng.reporters.jq.Main;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -366,11 +367,13 @@ public class PropFastGCC extends Propagator<IntVar> implements Countable {
 							}
 
 							// We compute an estimation of the number of
-							// remaining
-							// solutions and we update total and varMap
+							// remaining solutions and we update total and
+							// varMap
 							double estimNbRemainingSolutions = estimateNbSolutions(estimator, tools);
+
 							if (Double.isInfinite(estimNbRemainingSolutions)) {
 								haveEncounteredInfinity = true;
+
 							} else {
 								varMap.put(new IntVarAssignment(var, val), estimNbRemainingSolutions);
 								total += estimNbRemainingSolutions;
@@ -388,19 +391,20 @@ public class PropFastGCC extends Propagator<IntVar> implements Countable {
 						this.getModel().getEnvironment().worldPop();
 
 					}
+				}
 
-					if (!haveEncounteredInfinity) {
-						// If any instantiations of var lead to 0 solutions,
-						// then the constraint cannot be satisfied.
-						if (total == 0) {
-							return null;
-						}
-
-						// We put into map the solution densities for var
-						for (IntVarAssignment assignment : varMap.keySet()) {
-							map.put(assignment, varMap.get(assignment) / total);
-						}
+				if (!haveEncounteredInfinity) {
+					// If any instantiations of var lead to 0 solutions,
+					// then the constraint cannot be satisfied.
+					if (total == 0) {
+						return null;
 					}
+
+					// We put into map the solution densities for var
+					for (IntVarAssignment assignment : varMap.keySet()) {
+						map.put(assignment, varMap.get(assignment) / total);
+					}
+
 				}
 			}
 		}
@@ -410,10 +414,10 @@ public class PropFastGCC extends Propagator<IntVar> implements Countable {
 	public double estimateNbSolutions(String estimator, CountingTools tools) {
 		// TODO Auto-generated method stub
 
-		if(estimator==CountingEstimators.GCC_EXACT){
+		if (estimator == CountingEstimators.GCC_EXACT) {
 			return exactNbSolutions();
 		}
-		
+
 		// Creation of array of variables of the problem
 		IntVar[] vars = Arrays.copyOf(this.getVars(), n);
 
@@ -425,7 +429,7 @@ public class PropFastGCC extends Propagator<IntVar> implements Countable {
 		 */
 
 		// Creation of the bitset of values of the union of the domains and
-		// correspoding lower and upper bounds
+		// corresponding lower and upper bounds
 		int minValue = vars[0].getLB();
 		int maxValue = vars[0].getUB();
 		for (int i = 1; i < n; i++) {
@@ -636,7 +640,6 @@ public class PropFastGCC extends Propagator<IntVar> implements Countable {
 
 	}
 
-	
 	private int exactNbSolutions() {
 		// TODO Auto-generated method stub
 		Model m = new Model();
@@ -654,15 +657,16 @@ public class PropFastGCC extends Propagator<IntVar> implements Countable {
 			vars[k] = m.intVar(domain);
 		}
 		IntVar[] cards = new IntVar[n2];
-		for (int k = n; k < n2; k++) {
+		for (int k = n; k < n+n2; k++) {
 			IntVar c = this.getVar(k);
-			cards[k-n] = m.intVar(c.getLB(), c.getUB());
+			cards[k - n] = m.intVar(c.getLB(), c.getUB());
 		}
 		
-		m.globalCardinality(vars, values, cards, false);
+		
+		
+		m.globalCardinality(vars, values, cards, false).post();
 		List<Solution> sols = m.getSolver().findAllSolutions();
 		return sols.size();
 	}
-	
-	
+
 }

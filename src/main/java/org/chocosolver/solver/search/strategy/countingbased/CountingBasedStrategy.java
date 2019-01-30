@@ -24,6 +24,7 @@ import org.chocosolver.solver.search.strategy.decision.IntDecision;
 import org.chocosolver.solver.search.strategy.strategy.AbstractStrategy;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.util.PoolManager;
+import org.testng.reporters.jq.Main;
 
 /**
  * A class to represent strategies that are based on couting solutions. It
@@ -79,7 +80,7 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 	/**
 	 * Tools to help computing counting algorithms i countable propagators
 	 */
-	private CountingTools tools;
+	public static CountingTools tools = new CountingTools();
 
 	/**
 	 * Sorted array containing assignments to explore starting with order[next]
@@ -100,6 +101,10 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 	private final IntDecision WRONG;
 
 	private String updateOption = SOMETIMES_UPDATE;
+
+	private int sumSizeDomains;
+	private double ratioUpdateOrder = 0.8;
+	private int nbRefresh=0;
 
 	// ***********************************************************************************
 	// CONSTRUCTORS
@@ -132,8 +137,10 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 		for (int k = 0; k < countableList.size(); k++) {
 			this.countables[k] = countableList.get(k);
 		}
-
-		this.tools = new CountingTools();
+		this.sumSizeDomains=0;
+		for(IntVar vars : this.getVariables()){
+			this.sumSizeDomains+=vars.getDomainSize();
+		}
 
 		WRONG = new IntDecision(pool);
 		WRONG.set(model.intVar(0), 1, DecisionOperatorFactory.makeIntEq());
@@ -152,8 +159,11 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 		int nextSave = next;
 		IntVarAssignment[] orderSave = order;
 
+		int sumSizeDomainsSave = sumSizeDomains;
+
 		// If it is the first decision we make or if the order list need to
 		// be updated, then we compute it
+		
 		if (needUpdate()) {
 			computeOrder();
 			if (order == null) {
@@ -162,7 +172,6 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 			}
 			next = 0;
 		}
-
 		// We look for the next possible assignment in order. As
 		// we do not recompute the order array at each decision, some
 		// assignments might be impossible at this stage.
@@ -184,6 +193,7 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 			// instantiated. Then we apply a default strategy to choose the
 			// next assignment for the variables that we did not consider
 			// yet.
+
 			for (IntVar v : this.getVariables()) {
 				if (!v.isInstantiated()) {
 					d.set(v, v.getLB(), DecisionOperatorFactory.makeIntEq());
@@ -201,6 +211,7 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 			model.getEnvironment().save(() -> {
 				this.next = nextSave;
 				this.order = orderSave;
+				this.sumSizeDomains = sumSizeDomainsSave;
 			});
 			return d;
 		}
@@ -219,7 +230,6 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 	 * @return true if the order array need to be updated
 	 */
 	public boolean needUpdate() {
-
 		switch (updateOption) {
 		case NEVER_UPDATE:
 			return order == null;
@@ -229,12 +239,24 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 			if (order == null) {
 				return true;
 			}
-			double r = model.getSolver().getCurrentDepth() / 10.0;
-			long q = model.getSolver().getCurrentDepth() / 10;
+			// double r = model.getSolver().getCurrentDepth() / 10.0;
+			// long q = model.getSolver().getCurrentDepth() / 10;
+			//
+			// return r - q == 0;
+			
+			int currentSum = 0;
+			for (IntVar vars : this.getVariables()) {
+				currentSum += vars.getDomainSize();
+			}
+			if (currentSum < ratioUpdateOrder * sumSizeDomains) {
+				this.sumSizeDomains = currentSum;
+				nbRefresh++;
+				System.out.println("Nb of refresh : "+nbRefresh);
+				return true;
+			}
 
-			return r - q == 0;
 		default:
-			return order == null;
+			return order == null;	
 		}
 
 	}

@@ -22,64 +22,6 @@ import org.testng.annotations.Test;
 
 public class PropFastGCCCountingTest {
 
-	public static GlobalCardinality generateRandomGCC(Model model, IntVar[] vars, int[] vals, long seed) {
-		int m = vals.length;
-
-		int k = 0;
-		while (k < m && vals[k] == k) {
-			k++;
-		}
-		assert k == m : "The array of values must be such that, forall j, vals[j]=j. As it is a test tool, the values must be normalized this way.";
-
-		int[] sizeInvertedDomains = new int[m];
-		for (int i = 0; i < vars.length; i++) {
-			for (int y = vars[i].getLB(); y <= vars[i].getUB(); y = vars[i].nextValue(y)) {
-				sizeInvertedDomains[y]++;
-			}
-		}
-		int[] randomLB = new int[m];
-		int[] randomUB = new int[m];
-		Random rnd = new Random(seed);
-		for (int j = 0; j < m; j++) {
-			int r1 = rnd.nextInt(sizeInvertedDomains[j] + 1);
-			int r2 = rnd.nextInt(sizeInvertedDomains[j] + 1);
-			if (r1 < r2) {
-				randomLB[j] = r1;
-				randomUB[j] = r2;
-			} else {
-				randomLB[j] = r2;
-				randomUB[j] = r1;
-			}
-		}
-		int expectedSumLB = rnd.nextInt(vars.length + 1);
-		int sumLB = 0;
-		for (int j = 0; j < m; j++) {
-			sumLB += randomLB[j];
-		}
-		ArrayList<Integer> canBeDecreased = new ArrayList<Integer>();
-		for (int j = 0; j < m; j++) {
-			if (randomLB[j] > 0) {
-				canBeDecreased.add(j);
-			}
-		}
-		while (sumLB > expectedSumLB) {
-			int toBeDecreased = rnd.nextInt(canBeDecreased.size());
-			int index = canBeDecreased.get(toBeDecreased);
-			randomLB[index]--;
-			if (randomLB[index] == 0) {
-				canBeDecreased.remove(toBeDecreased);
-			}
-			sumLB--;
-		}
-		IntVar[] occurrences = new IntVar[m];
-		for (int j = 0; j < m; j++) {
-			occurrences[j] = model.intVar(randomLB[j], randomUB[j]);
-		}
-
-		GlobalCardinality gcc = new GlobalCardinality(vars, vals, occurrences, true);
-		return gcc;
-	}
-
 	public static Model generateRandomValueGraph(int n, int m, double p, long seed) {
 		Model model = new Model();
 		IntVar[] vars = new IntVar[n];
@@ -124,44 +66,6 @@ public class PropFastGCCCountingTest {
 		cards[3] = model.intVar(0,2);
 		
 		return (GlobalCardinality) model.globalCardinality(vars, values, cards, false);
-	}
-
-
-	public static void main(String[] args) {
-		CountingTools tools = new CountingTools();
-//		int n = 20;
-//		int m = 20;
-//		double p = 0.9;
-//
-//		Random rnd = new Random();
-//		long seed = rnd.nextLong();
-//		System.out.println("SEED : " + seed);
-//
-//		Model model = generateRandomValueGraph(n, m, p, seed);
-//
-//		IntVar[] vars = model.retrieveIntVars(true);
-//
-//		int[] vals = new int[m];
-//		for (int j = 0; j < m; j++) {
-//			vals[j] = j;
-//		}
-//		GlobalCardinality gcc = generateRandomGCC(model, vars, vals, seed);
-		
-		GlobalCardinality gcc = generateInstance1();
-		PropFastGCC prop = (PropFastGCC) gcc.getPropagator(0);
-		
-		try {
-			prop.propagate(PropagatorEventType.FULL_PROPAGATION.getMask());
-		
-			System.out.println(prop.estimateNbSolutions(CountingEstimators.GCC_EXACT, tools));
-
-		} catch (ContradictionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		
-		
 	}
 
 }
