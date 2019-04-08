@@ -239,10 +239,6 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 			if (order == null) {
 				return true;
 			}
-			// double r = model.getSolver().getCurrentDepth() / 10.0;
-			// long q = model.getSolver().getCurrentDepth() / 10;
-			//
-			// return r - q == 0;
 			
 			int currentSum = 0;
 			for (IntVar vars : this.getVariables()) {
@@ -251,7 +247,7 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 			if (currentSum < ratioUpdateOrder * sumSizeDomains) {
 				this.sumSizeDomains = currentSum;
 				nbRefresh++;
-				System.out.println("Nb of refresh : "+nbRefresh);
+				//System.out.println("Nb of refresh : "+nbRefresh);
 				return true;
 			}
 
