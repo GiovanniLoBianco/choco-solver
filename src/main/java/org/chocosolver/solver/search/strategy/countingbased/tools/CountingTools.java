@@ -8,7 +8,6 @@
  */
 package org.chocosolver.solver.search.strategy.countingbased.tools;
 
-
 /**
  * 
  * Tool class containing several methods used into counting algorithms
@@ -19,12 +18,16 @@ package org.chocosolver.solver.search.strategy.countingbased.tools;
 public class CountingTools {
 
 	public static final int SIZE = 10000;
-	public static final int SIZE_FACT = 171;
+	public static final int SIZE_FACT = 10;
 
 	private double[] factorsBM = new double[SIZE];
 	private double[][] factorsLB = new double[SIZE][SIZE];
 	private double[] fact = new double[SIZE_FACT];
 	private double[][] arrangements = new double[SIZE_FACT][SIZE_FACT];
+
+	private double[][] binomCoeff = new double[SIZE_FACT][];
+	
+	private double[][] triangleCoeff = new double[SIZE_FACT][];
 
 	/**
 	 * Pre-compute a high number of Bregman-Minc facors, Liang-Bai factors,
@@ -53,6 +56,36 @@ public class CountingTools {
 				this.arrangements[i][j] = this.fact[i] / this.fact[i - j];
 			}
 		}
+
+		this.triangleCoeff[0] = new double[1];
+		this.triangleCoeff[0][0] = 0;
+		this.triangleCoeff[1] = new double[2];
+		this.triangleCoeff[1][0] = 0;
+		this.triangleCoeff[1][1] = 1;
+		for (int n = 2; n < SIZE_FACT; n++) {
+			this.triangleCoeff[n] = new double[n + 1];
+			this.triangleCoeff[n][0] = 0;
+			for (int m = 1; m < n; m++) {
+				this.triangleCoeff[n][m] = m*(this.triangleCoeff[n - 1][m - 1] + this.triangleCoeff[n - 1][m]);
+			}
+			this.triangleCoeff[n][n] = this.fact[n];
+		}
+		
+		this.binomCoeff[0] = new double[1];
+		this.binomCoeff[0][0] = 1;
+		this.binomCoeff[1] = new double[2];
+		this.binomCoeff[1][0] = 1;
+		this.binomCoeff[1][1] = 1;
+		for (int n = 2; n < SIZE_FACT; n++) {
+			this.binomCoeff[n] = new double[n + 1];
+			this.binomCoeff[n][0] = 1;
+			for (int m = 1; m < n; m++) {
+				this.binomCoeff[n][m] = this.binomCoeff[n - 1][m - 1] + this.binomCoeff[n - 1][m];
+			}
+			this.binomCoeff[n][n] = 1;
+		}
+		
+		
 	}
 
 	/**
@@ -95,6 +128,12 @@ public class CountingTools {
 		return arrangements[n][k];
 	}
 	
+	public double computebinomCoeff(int n, int m){
+		return binomCoeff[n][m];
+	}
+	
+	
+
 	public static void main(String[] args) {
 		CountingTools tools = new CountingTools();
 	}
