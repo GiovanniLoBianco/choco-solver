@@ -219,9 +219,9 @@ public class PropAllDiffAC extends Propagator<IntVar> implements Countable {
 					}
 				}
 				double p = sumDomain / (1.0 * nbRemainingVars * remainingValueSet.size());
-				for (int k = nbFakeVars + 1; k <= remainingValueSet.size(); k++) {
-					estim *= p * k;
-				}
+				estim = tools.computeFactorial(remainingValueSet.size())
+						/ tools.computeFactorial(remainingValueSet.size() - nbRemainingVars)
+						* Math.pow(p, nbRemainingVars);
 				break;
 			case CountingEstimators.ALLDIFFERENT_FDS:
 				int k = nbFakeVars + 1;

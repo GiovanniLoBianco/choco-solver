@@ -26,7 +26,7 @@ import org.testng.reporters.jq.Main;
 
 public class PropAllDiffACCountingTest {
 
-	private CountingTools tools = new CountingTools();
+	private static CountingTools tools = new CountingTools();
 
 	public static PropAllDiffAC createInstance1() {
 		Model model = new Model();
@@ -133,7 +133,7 @@ public class PropAllDiffACCountingTest {
 
 		try {
 			assertEquals(c1.estimateNbSolutions(CountingEstimators.ALLDIFFERENT_ER, tools), estim1,
-					"PQZ estimator correct");
+					"ER estimator correct");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -148,7 +148,7 @@ public class PropAllDiffACCountingTest {
 
 		try {
 			assertEquals(c2.estimateNbSolutions(CountingEstimators.ALLDIFFERENT_ER, tools), estim2,
-					"PQZ estimator correct with fixed variables");
+					"ER estimator correct with fixed variables");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -163,7 +163,7 @@ public class PropAllDiffACCountingTest {
 
 		try {
 			assertEquals(c3.estimateNbSolutions(CountingEstimators.ALLDIFFERENT_ER, tools), estim3,
-					"PQZ estimator correct with any fake variables");
+					"ER estimator correct with any fake variables");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -182,7 +182,7 @@ public class PropAllDiffACCountingTest {
 
 		try {
 			assertEquals(c1.estimateNbSolutions(CountingEstimators.ALLDIFFERENT_FDS, tools), estim1,
-					"PQZ estimator correct");
+					"FDS estimator correct");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -198,7 +198,7 @@ public class PropAllDiffACCountingTest {
 
 		try {
 			assertEquals(c2.estimateNbSolutions(CountingEstimators.ALLDIFFERENT_FDS, tools), estim2,
-					"PQZ estimator correct with fixed variables");
+					"FDS estimator correct with fixed variables");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -215,7 +215,7 @@ public class PropAllDiffACCountingTest {
 
 		try {
 			assertEquals(c3.estimateNbSolutions(CountingEstimators.ALLDIFFERENT_FDS, tools), estim3,
-					"PQZ estimator correct with any fake variables");
+					"FDS estimator correct with any fake variables");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
