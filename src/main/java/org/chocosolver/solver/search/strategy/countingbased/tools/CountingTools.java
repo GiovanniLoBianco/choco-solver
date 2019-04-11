@@ -128,8 +128,12 @@ public class CountingTools {
 		return arrangements[n][k];
 	}
 	
-	public double computebinomCoeff(int n, int m){
-		return binomCoeff[n][m];
+	public double computebinomCoeff(int n, int k){
+		return binomCoeff[n][k];
+	}
+	
+	public double computetriangleCoef(int n, int k){
+		return triangleCoeff[n][k];
 	}
 	
 	

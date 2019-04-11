@@ -28,5 +28,13 @@ public class CountingEstimators {
 	public static final String GCC_PQZ = "gcc_PQZ";
 	public static final String GCC_CORRECTION = "gcc_Correction";
 	public static final String GCC_EXACT = "gcc_Exact";
+	
+	// ---------- NVALUE --------------
+	public static final String NVALUE_ER = "nvalue_ER";
+	public static final String ATMOST_NVALUE_ER = "atmost_nvalue_ER";
+	
+	// ---------- AMONG --------------
+	public static final String AMONG_ER = "among_ER";
+	
 
 }
