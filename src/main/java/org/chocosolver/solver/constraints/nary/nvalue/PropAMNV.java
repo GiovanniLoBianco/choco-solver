@@ -10,6 +10,7 @@ package org.chocosolver.solver.constraints.nary.nvalue;
 
 import org.chocosolver.solver.Cause;
 import org.chocosolver.solver.constraints.Constraint;
+import org.chocosolver.solver.constraints.ConstraintsName;
 import org.chocosolver.solver.constraints.Propagator;
 import org.chocosolver.solver.constraints.nary.nvalue.amnv.graph.G;
 import org.chocosolver.solver.constraints.nary.nvalue.amnv.mis.F;
@@ -235,8 +236,8 @@ public class PropAMNV extends Propagator<IntVar> implements Countable {
 			// Cardinality variable N
 			IntVar N = this.getVar(n);
 			int sum=0;
-			switch(estimator){
-			case CountingEstimators.NVALUE_ER: 
+			switch(this.getConstraint().getName()){
+			case ConstraintsName.NVALUES: 
 				for(int card = N.getLB(); card<=N.getUB(); card = N.nextValue(card)){
 					sum+=tools.computebinomCoeff(m, card)*tools.computetriangleCoef(n, card);
 				}
