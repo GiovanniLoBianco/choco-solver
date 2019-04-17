@@ -94,7 +94,7 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 
 	// Those following variables define the estimator that will be used on the
 	// concerned constraints
-	private String estimatorAlldifferent = CountingEstimators.ALLDIFFERENT_FDS;
+	private String estimatorAlldifferent = CountingEstimators.ALLDIFFERENT_ER;
 	private String estimatorGCC = CountingEstimators.GCC_CORRECTION;
 
 	// A decision that is trivially wrong and not refutable
