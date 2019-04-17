@@ -194,12 +194,15 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 			// next assignment for the variables that we did not consider
 			// yet.
 
-			for (IntVar v : this.getVariables()) {
-				if (!v.isInstantiated()) {
-					d.set(v, v.getLB(), DecisionOperatorFactory.makeIntEq());
-					return d;
-				}
-			}
+//			for (IntVar v : this.getVariables()) {
+//				if (!v.isInstantiated()) {
+//					d.set(v, v.getLB(), DecisionOperatorFactory.makeIntEq());
+//					return d;
+//				}
+//			}
+			
+			return null;
+			
 			// TODO : renvoyer null et faire un séquenceur
 
 		} else {
@@ -218,7 +221,7 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 
 		// If we get here, then every variables are instantiated, then we return
 		// null
-		return null;
+		//return null;
 	}
 
 	abstract public void computeOrder();
