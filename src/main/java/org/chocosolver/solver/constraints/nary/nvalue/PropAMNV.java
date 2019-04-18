@@ -153,9 +153,8 @@ public class PropAMNV extends Propagator<IntVar> implements Countable {
 
 							// We force GAC after the instantiation
 							Constraint c = this.getConstraint();
-							for (Propagator p : c.getPropagators()) {
-								p.propagate(PropagatorEventType.FULL_PROPAGATION.getMask());
-							}
+
+							this.propagate(PropagatorEventType.FULL_PROPAGATION.getMask());
 
 							// We compute an estimation of the number of
 							// remaining
@@ -232,23 +231,23 @@ public class PropAMNV extends Propagator<IntVar> implements Countable {
 				sumDomain += x.getDomainSize();
 			}
 			double p = sumDomain / (1.0 * n * m);
-			
+
 			// Cardinality variable N
 			IntVar N = this.getVar(n);
-			int sum=0;
-			switch(this.getConstraint().getName()){
-			case ConstraintsName.NVALUES: 
-				for(int card = N.getLB(); card<=N.getUB(); card = N.nextValue(card)){
-					sum+=tools.computebinomCoeff(m, card)*tools.computetriangleCoef(n, card);
+			int sum = 0;
+			switch (this.getConstraint().getName()) {
+			case ConstraintsName.NVALUES:
+				for (int card = N.getLB(); card <= N.getUB(); card = N.nextValue(card)) {
+					sum += tools.computebinomCoeff(m, card) * tools.computetriangleCoef(n, card);
 				}
 				break;
 			default:
-				for(int card = 1; card<=N.getUB(); card++){
-					sum+=tools.computebinomCoeff(m, card)*tools.computetriangleCoef(n, card);
+				for (int card = 1; card <= N.getUB(); card++) {
+					sum += tools.computebinomCoeff(m, card) * tools.computetriangleCoef(n, card);
 				}
 			}
-			
-			estim = sum*Math.pow(p, n);
+
+			estim = sum * Math.pow(p, n);
 
 			return estim;
 		}

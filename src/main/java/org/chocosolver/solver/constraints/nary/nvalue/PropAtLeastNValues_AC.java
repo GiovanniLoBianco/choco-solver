@@ -51,7 +51,7 @@ import static org.chocosolver.util.tools.ArrayUtils.concat;
  *
  * @author Jean-Guillaume Fages
  */
-public class PropAtLeastNValues_AC extends Propagator<IntVar> implements Countable{
+public class PropAtLeastNValues_AC extends Propagator<IntVar> implements Countable {
 
 	// ***********************************************************************************
 	// VARIABLES
@@ -402,9 +402,8 @@ public class PropAtLeastNValues_AC extends Propagator<IntVar> implements Countab
 
 							// We force GAC after the instantiation
 							Constraint c = this.getConstraint();
-							for (Propagator p : c.getPropagators()) {
-								p.propagate(PropagatorEventType.FULL_PROPAGATION.getMask());
-							}
+
+							this.propagate(PropagatorEventType.FULL_PROPAGATION.getMask());
 
 							// We compute an estimation of the number of
 							// remaining
@@ -484,7 +483,7 @@ public class PropAtLeastNValues_AC extends Propagator<IntVar> implements Countab
 			// Cardinality variable N
 			IntVar N = this.getVar(n);
 			int sum = 0;
-			for (int card = N.getLB(); card <= n; card++) {
+			for (int card = N.getLB(); card <= Math.min(n, m); card++) {
 				sum += tools.computebinomCoeff(m, card) * tools.computetriangleCoef(n, card);
 			}
 

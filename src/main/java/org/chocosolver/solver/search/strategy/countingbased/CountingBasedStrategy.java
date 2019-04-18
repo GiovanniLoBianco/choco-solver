@@ -54,9 +54,9 @@ public abstract class CountingBasedStrategy extends AbstractStrategy<IntVar> {
 	// ***********************************************************************************
 
 	// Constants for update settings
-	private static final String NEVER_UPDATE = "Never Update";
-	private static final String ALWAYS_UPDATE = "Always Update";
-	private static final String SOMETIMES_UPDATE = "Sometimes Update";
+	public static final String NEVER_UPDATE = "Never Update";
+	public static final String ALWAYS_UPDATE = "Always Update";
+	public static final String SOMETIMES_UPDATE = "Sometimes Update";
 
 	// ***********************************************************************************
 	// VARIABLES
