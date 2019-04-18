@@ -25,6 +25,11 @@ public class MinSD extends CountingBasedStrategy {
 		super(model);
 		// TODO Auto-generated constructor stub
 	}
+	
+	public MinSD(Model model, String updateOption){
+		super(model);
+		this.setUpdateOption(updateOption);
+	}
 
 	@Override
 	public void computeOrder() {

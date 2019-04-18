@@ -26,6 +26,11 @@ public class AverageSD extends CountingBasedStrategy {
 		super(model);
 		// TODO Auto-generated constructor stub
 	}
+	
+	public AverageSD(Model model, String updateOption){
+		super(model);
+		this.setUpdateOption(updateOption);
+	}
 
 	@Override
 	public void computeOrder() {

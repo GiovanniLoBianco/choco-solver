@@ -27,6 +27,11 @@ public class MaxSD extends CountingBasedStrategy {
 		super(model);
 		// TODO Auto-generated constructor stub
 	}
+	
+	public MaxSD(Model model, String updateOption){
+		super(model);
+		this.setUpdateOption(updateOption);
+	}
 
 	@Override
 	public void computeOrder() {
